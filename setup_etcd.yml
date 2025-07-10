@@ -1,0 +1,63 @@
+- name: Etcd kurulumu (Ubuntu için binary)
+  hosts: etcd
+  become: true
+  vars:
+    etcd_version: "v3.5.14"
+    etcd_download_url: "https://github.com/etcd-io/etcd/releases/download/{{ etcd_version }}/etcd-{{ etcd_version }}-linux-amd64.tar.gz"
+    etcd_install_dir: "/usr/local/bin"
+
+  tasks:
+    - name: Etcd paketini indir
+      get_url:
+        url: "{{ etcd_download_url }}"
+        dest: /tmp/etcd.tar.gz
+
+    - name: Etcd paketini aç
+      unarchive:
+        src: /tmp/etcd.tar.gz
+        dest: /tmp
+        remote_src: yes
+
+    - name: Etcd binary'lerini kopyala ve çalıştırılabilir yap
+      shell: |
+        cp /tmp/etcd-{{ etcd_version }}-linux-amd64/{{ item }} {{ etcd_install_dir }}/{{ item }}
+        chmod +x {{ etcd_install_dir }}/{{ item }}
+      loop:
+        - etcd
+        - etcdctl
+
+    - name: Etcd config dosyasını oluştur
+      template:
+        src: templates/etcd.conf.j2
+        dest: /etc/default/etcd
+        mode: '0644'
+
+    - name: Systemd servis dosyasını oluştur
+      copy:
+        dest: /etc/systemd/system/etcd.service
+        content: |
+          [Unit]
+          Description=etcd key-value store
+          Documentation=https://github.com/etcd-io/etcd
+          After=network.target
+
+          [Service]
+          ExecStart=/usr/local/bin/etcd
+          Restart=always
+          RestartSec=5
+          LimitNOFILE=40000
+          EnvironmentFile=-/etc/default/etcd
+
+          [Install]
+          WantedBy=multi-user.target
+
+    - name: Systemd yeniden yükle
+      systemd:
+        daemon_reload: yes
+
+    - name: Etcd servisini başlat ve etkinleştir
+      systemd:
+        name: etcd
+        state: started
+        enabled: yes
+

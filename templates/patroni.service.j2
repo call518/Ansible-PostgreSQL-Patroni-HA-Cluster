@@ -1,0 +1,17 @@
+[Unit]
+Description=Patroni - PostgreSQL HA
+After=network.target
+
+[Service]
+Type=simple
+User=postgres
+Group=postgres
+Environment="PATH=/usr/lib/postgresql/16/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin"
+ExecStart=/opt/patroni-venv/bin/patroni /etc/patroni.yml
+KillMode=process
+TimeoutSec=30
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+

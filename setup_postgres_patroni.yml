@@ -1,0 +1,48 @@
+- name: PostgreSQL & Patroni kurulumu
+  hosts: postgres
+  become: true
+
+  tasks:
+    - name: Gerekli paketleri kur
+      apt:
+        name:
+          - python3-venv
+          - python3-pip
+          - postgresql
+          - postgresql-contrib
+          - libpq-dev
+          - build-essential
+        update_cache: yes
+
+    - name: Python venv oluştur
+      command: python3 -m venv /opt/patroni-venv
+      args:
+        creates: /opt/patroni-venv
+
+    - name: Patroni ve bağımlılıkları kur
+      pip:
+        name:
+          - patroni
+          - psycopg2-binary
+          - python-etcd
+        virtualenv: /opt/patroni-venv
+
+    - name: Patroni config dosyasını kopyala
+      template:
+        src: templates/patroni.yml.j2
+        dest: /etc/patroni.yml
+        mode: '0644'
+
+    - name: Patroni systemd servisini kopyala
+      template:
+        src: templates/patroni.service.j2
+        dest: /etc/systemd/system/patroni.service
+        mode: '0644'
+
+    - name: Systemd servisini aktif et
+      systemd:
+        name: patroni
+        daemon_reload: yes
+        enabled: yes
+        state: started
+
