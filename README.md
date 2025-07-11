@@ -8,13 +8,20 @@ The cluster consists of:
 | ansible-manager   | <-- Runs Ansible playbooks
 +-------------------+
 
+
+
 +---------+    +---------+
 | etcd1   |    | node1   | <-- PostgreSQL + Patroni
 +---------+    +---------+
                    |
+
+
+            
                +---------+
                | node2   | <-- PostgreSQL + Patroni
                +---------+
+
+
 Step-by-Step Setup
 Create Virtual Machines with Multipass
 multipass launch --name ansible-manager
@@ -22,8 +29,9 @@ multipass launch --name etcd1
 multipass launch --name node1
 multipass launch --name node2
 Check their IPs:
-multipass list
 
+
+multipass list
 Name                    State             IPv4             Image
 ansible-manager         Running           172.26.238.104   Ubuntu 24.04 LTS
 etcd1                   Running           172.26.228.41    Ubuntu 24.04 LTS
