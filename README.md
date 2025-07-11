@@ -1,11 +1,10 @@
-Architecture Overview
+    Architecture Overview
 
-
-The cluster consists of:
-1 Ansible Manager Node
-1 Haproxy Node
-1 etcd Node
-2 PostgreSQL Nodes managed by Patroni
+    The cluster consists of:
+    1 Ansible Manager Node
+    1 Haproxy Node
+    1 etcd Node
+    2 PostgreSQL Nodes managed by Patroni
 
 
 
