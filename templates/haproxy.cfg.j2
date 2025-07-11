@@ -1,0 +1,42 @@
+global
+    maxconn 1000
+    log 127.0.0.1 local0
+
+defaults
+    log global
+    mode tcp
+    retries 2
+    timeout client 120m
+    timeout connect 4s
+    timeout server 120m
+    timeout check 5s
+
+listen stats
+    mode http
+    bind *:{{ haproxy_port_stats }}
+    stats enable
+    stats uri /
+
+frontend a_listen_fe
+    acl is-read-service-dead nbsrv(standby) lt 1
+    use_backend postgres if is-read-service-dead
+    default_backend standby
+
+listen postgres
+    bind {{ haproxy_bind_ip }}:{{ haproxy_port_pg_rw }}
+    option httpchk OPTIONS/master
+    http-check expect status 200
+    default-server inter 3s fall 4 rise 3 on-marked-down shutdown-sessions
+    {% for node in postgres_nodes %}
+    server {{ node.name }} {{ node.ip }}:{{ node.port }} maxconn 1000 check port {{ node.check_port }}
+    {% endfor %}
+
+listen standby
+    bind {{ haproxy_bind_ip }}:{{ haproxy_port_pg_ro }}
+    option httpchk OPTIONS/replica
+    http-check expect status 200
+    default-server inter 3s fall 4 rise 3 on-marked-down shutdown-sessions
+    {% for node in postgres_nodes %}
+    server {{ node.name }} {{ node.ip }}:{{ node.port }} maxconn 1000 check port {{ node.check_port }}
+    {% endfor %}
+
