@@ -9,14 +9,28 @@ The cluster consists of:
 +-------------------+
 | ansible-manager   | <-- Runs Ansible playbooks
 +-------------------+
-
+                |
+                
 +---------+    +---------+
 | etcd1   |    | node1   | <-- PostgreSQL + Patroni
 +---------+    +---------+
                    |
-               
+                   
                +---------+
                | node2   | <-- PostgreSQL + Patroni
                +---------+
 
 
+
+
++-------------------+
+| ansible-manager   | <-- Runs Ansible playbooks
++-------------------+
+
++---------+    +---------+
+| etcd1   |    | node1   | <-- PostgreSQL + Patroni
++---------+    +---------+
+                   |
+               +---------+
+               | node2   | <-- PostgreSQL + Patroni
+               +---------+
