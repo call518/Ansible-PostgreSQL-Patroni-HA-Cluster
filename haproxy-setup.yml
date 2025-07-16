@@ -7,30 +7,25 @@
     haproxy_port_pg_rw: 5000
     haproxy_port_pg_ro: 5001
     haproxy_port_stats: 7000
-    haproxy_bind_ip: "{{ ansible_host }}"
+    haproxy_bind_ip: "{{ ansible_default_ipv4.address }}"
 
   tasks:
     - name: PostgreSQL node listesi başlat
       set_fact:
         postgres_nodes: []
 
-    - name: PostgreSQL node'larını doğrudan IP'den al
+    - name: PostgreSQL node'larını IP ile listele ve isim ata (pg1, pg2 ...)
       set_fact:
-        postgres_nodes: "{{ postgres_nodes + [ { 'name': item, 'ip': item, 'port': 5432, 'check_port': 8008 } ] }}"
+        postgres_nodes: "{{ postgres_nodes + [ { 'name': 'pg' + (index + 1) | string, 'ip': item, 'port': 5432, 'check_port': 8008 } ] }}"
       loop: "{{ groups['postgres'] }}"
+      loop_control:
+        index_var: index
 
     - name: HAProxy'yi kur
-      apt:
+      dnf:
         name: haproxy
         state: present
         update_cache: yes
-
-    - name: SELinux boolean'ı aç (varsa)
-      ansible.posix.seboolean:
-        name: haproxy_connect_any
-        state: true
-        persistent: yes
-      when: ansible_facts.selinux.status is defined and ansible_facts.selinux.status == "enabled"
 
     - name: HAProxy konfigürasyonunu oluştur
       template:
@@ -40,6 +35,22 @@
         group: root
         mode: '0644'
       notify: Restart HAProxy
+
+    - name: python3-libsemanage paketini kur
+      dnf:
+        name: python3-libsemanage
+        state: present
+      become: true
+
+    - name: SELinux boolean'ı aç (haproxy_connect_any)
+      ansible.posix.seboolean:
+        name: haproxy_connect_any
+        state: true
+        persistent: yes
+      become: true
+      when: ansible_facts.selinux.status is defined and ansible_facts.selinux.status == "enabled"
+
+
 
     - name: HAProxy servisini başlat ve enable et
       systemd:
@@ -52,3 +63,4 @@
       systemd:
         name: haproxy
         state: restarted
+

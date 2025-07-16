@@ -37,8 +37,8 @@ bootstrap:
 postgresql:
   listen: {{ ansible_host }}:5432
   connect_address: {{ ansible_host }}:5432
-  data_dir: /var/lib/postgresql/data
-  pgpass: /tmp/pgpass
+  data_dir: /var/lib/pgsql/16/data
+  pgpass: /var/lib/pgsql/.pgpass
   authentication:
     replication:
       username: repuser

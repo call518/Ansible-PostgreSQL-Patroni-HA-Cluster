@@ -1,38 +1,49 @@
-- name: Etcd kurulumu (Ubuntu için binary)
+- name: Etcd kurulumu (Rocky Linux 9 Minimal)
   hosts: etcd
   become: true
+
   vars:
     etcd_version: "v3.5.14"
     etcd_download_url: "https://github.com/etcd-io/etcd/releases/download/{{ etcd_version }}/etcd-{{ etcd_version }}-linux-amd64.tar.gz"
     etcd_install_dir: "/usr/local/bin"
 
   tasks:
-    - name: Etcd paketini indir
+    - name: Gerekli yardımcı paketleri kur
+      yum:
+        name:
+          - tar
+          - wget
+          - curl
+        state: present
+
+    - name: etcd binary'yi indir
       get_url:
         url: "{{ etcd_download_url }}"
         dest: /tmp/etcd.tar.gz
 
-    - name: Etcd paketini aç
+    - name: etcd arşivini aç
       unarchive:
         src: /tmp/etcd.tar.gz
         dest: /tmp
         remote_src: yes
 
-    - name: Etcd binary'lerini kopyala ve çalıştırılabilir yap
-      shell: |
-        cp /tmp/etcd-{{ etcd_version }}-linux-amd64/{{ item }} {{ etcd_install_dir }}/{{ item }}
-        chmod +x {{ etcd_install_dir }}/{{ item }}
+    - name: etcd ve etcdctl binary'lerini kopyala ve çalıştırılabilir yap
+      copy:
+        src: "/tmp/etcd-{{ etcd_version }}-linux-amd64/{{ item }}"
+        dest: "{{ etcd_install_dir }}/{{ item }}"
+        mode: '0755'
+        remote_src: yes
       loop:
         - etcd
         - etcdctl
 
-    - name: Etcd config dosyasını oluştur
+    - name: etcd config dosyasını oluştur
       template:
         src: templates/etcd.conf.j2
         dest: /etc/default/etcd
         mode: '0644'
 
-    - name: Systemd servis dosyasını oluştur
+    - name: etcd systemd servis dosyasını oluştur
       copy:
         dest: /etc/systemd/system/etcd.service
         content: |
@@ -51,11 +62,11 @@
           [Install]
           WantedBy=multi-user.target
 
-    - name: Systemd yeniden yükle
+    - name: systemd daemon'ı yeniden yükle
       systemd:
         daemon_reload: yes
 
-    - name: Etcd servisini başlat ve etkinleştir
+    - name: etcd servisini başlat ve etkinleştir
       systemd:
         name: etcd
         state: started
