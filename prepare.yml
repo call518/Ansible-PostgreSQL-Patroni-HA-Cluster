@@ -1,0 +1,40 @@
+---
+- name: Prepare system and install Ansible
+  hosts: localhost
+  become: true
+  gather_facts: true
+  
+  tasks:
+    - name: Update apt package cache
+      apt:
+        update_cache: true
+        cache_valid_time: 3600
+      when: ansible_os_family == "Debian"
+
+    - name: Install software-properties-common
+      apt:
+        name: software-properties-common
+        state: present
+      when: ansible_os_family == "Debian"
+
+    - name: Add Ansible PPA repository
+      apt_repository:
+        repo: ppa:ansible/ansible
+        state: present
+        update_cache: true
+      when: ansible_os_family == "Debian"
+
+    - name: Install Ansible
+      apt:
+        name: ansible
+        state: present
+      when: ansible_os_family == "Debian"
+
+    - name: Verify Ansible installation
+      command: ansible --version
+      register: ansible_version_output
+      changed_when: false
+
+    - name: Display Ansible version
+      debug:
+        msg: "{{ ansible_version_output.stdout_lines }}"
