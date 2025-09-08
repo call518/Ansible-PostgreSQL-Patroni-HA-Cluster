@@ -1,4 +1,4 @@
-- name: Etcd kurulumu (Rocky Linux 9 Minimal)
+- name: Etcd installation (Rocky Linux 9 Minimal)
   hosts: etcd
   become: true
 
@@ -8,7 +8,7 @@
     etcd_install_dir: "/usr/local/bin"
 
   tasks:
-    - name: Gerekli yardımcı paketleri kur
+    - name: Install required helper packages
       yum:
         name:
           - tar
@@ -16,18 +16,18 @@
           - curl
         state: present
 
-    - name: etcd binary'yi indir
+    - name: Download etcd binary
       get_url:
         url: "{{ etcd_download_url }}"
         dest: /tmp/etcd.tar.gz
 
-    - name: etcd arşivini aç
+    - name: Extract etcd archive
       unarchive:
         src: /tmp/etcd.tar.gz
         dest: /tmp
         remote_src: yes
 
-    - name: etcd ve etcdctl binary'lerini kopyala ve çalıştırılabilir yap
+    - name: Copy etcd and etcdctl binaries and make executable
       copy:
         src: "/tmp/etcd-{{ etcd_version }}-linux-amd64/{{ item }}"
         dest: "{{ etcd_install_dir }}/{{ item }}"
@@ -37,13 +37,13 @@
         - etcd
         - etcdctl
 
-    - name: etcd config dosyasını oluştur
+    - name: Create etcd config file
       template:
         src: templates/etcd.conf.j2
         dest: /etc/default/etcd
         mode: '0644'
 
-    - name: etcd systemd servis dosyasını oluştur
+    - name: Create etcd systemd service file
       copy:
         dest: /etc/systemd/system/etcd.service
         content: |
@@ -62,11 +62,11 @@
           [Install]
           WantedBy=multi-user.target
 
-    - name: systemd daemon'ı yeniden yükle
+    - name: Reload systemd daemon
       systemd:
         daemon_reload: yes
 
-    - name: etcd servisini başlat ve etkinleştir
+    - name: Start and enable etcd service
       systemd:
         name: etcd
         state: started

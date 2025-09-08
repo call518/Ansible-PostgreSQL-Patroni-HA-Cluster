@@ -10,24 +10,24 @@
     haproxy_bind_ip: "{{ ansible_default_ipv4.address }}"
 
   tasks:
-    - name: PostgreSQL node listesi başlat
+    - name: Initialize PostgreSQL node list
       set_fact:
         postgres_nodes: []
 
-    - name: PostgreSQL node'larını IP ile listele ve isim ata (pg1, pg2 ...)
+    - name: List PostgreSQL nodes with IP and assign names (pg1, pg2 ...)
       set_fact:
         postgres_nodes: "{{ postgres_nodes + [ { 'name': 'pg' + (index + 1) | string, 'ip': item, 'port': 5432, 'check_port': 8008 } ] }}"
       loop: "{{ groups['postgres'] }}"
       loop_control:
         index_var: index
 
-    - name: HAProxy'yi kur
+    - name: Install HAProxy
       dnf:
         name: haproxy
         state: present
         update_cache: yes
 
-    - name: HAProxy konfigürasyonunu oluştur
+    - name: Create HAProxy configuration
       template:
         src: haproxy.cfg.j2
         dest: /etc/haproxy/haproxy.cfg
@@ -36,13 +36,13 @@
         mode: '0644'
       notify: Restart HAProxy
 
-    - name: python3-libsemanage paketini kur
+    - name: Install python3-libsemanage package
       dnf:
         name: python3-libsemanage
         state: present
       become: true
 
-    - name: SELinux boolean'ı aç (haproxy_connect_any)
+    - name: Enable SELinux boolean (haproxy_connect_any)
       ansible.posix.seboolean:
         name: haproxy_connect_any
         state: true
@@ -52,7 +52,7 @@
 
 
 
-    - name: HAProxy servisini başlat ve enable et
+    - name: Start and enable HAProxy service
       systemd:
         name: haproxy
         state: started
