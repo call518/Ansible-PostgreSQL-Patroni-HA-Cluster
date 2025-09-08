@@ -7,6 +7,12 @@
     2 PostgreSQL Nodes managed by Patroni
 
 
+    Hostnames:
+    192.168.156.101    pgsql-ha-haproxy
+    192.168.156.102    pgsql-ha-etcd
+    192.168.156.103    pgsql-ha-01
+    192.168.156.104    pgsql-ha-02
+
 
                         +-------------------+
                         | ansible-manager   |  <-- Runs Ansible playbooks
@@ -37,23 +43,23 @@
 
     ansible-playbook -i inventory.ini setup_etcd.yml # setup etcd
 
-    etcdctl --endpoints=172.26.228.41:2379 endpoint status --write-out=table # chech etcd status
-    +--------------------+------------------+---------+---------+-----------+------------+-----------+------------+--------------------+--------+
-    |      ENDPOINT      |        ID        | VERSION | DB SIZE | IS LEADER | IS LEARNER | RAFT TERM | RAFT INDEX | RAFT APPLIED INDEX | ERRORS |
-    +--------------------+------------------+---------+---------+-----------+------------+-----------+------------+--------------------+--------+
-    | 172.26.228.41:2379 | 9f4ab1e673198e09 |  3.5.14 |   20 kB |      true |      false |         2 |          4 |                  4 |        |
-    +--------------------+------------------+---------+---------+-----------+------------+-----------+------------+--------------------+--------+
+    etcdctl --endpoints=192.168.156.102:2379 endpoint status --write-out=table # chech etcd status
+    +----------------------+------------------+---------+---------+-----------+------------+-----------+------------+--------------------+--------+
+    |       ENDPOINT       |        ID        | VERSION | DB SIZE | IS LEADER | IS LEARNER | RAFT TERM | RAFT INDEX | RAFT APPLIED INDEX | ERRORS |
+    +----------------------+------------------+---------+---------+-----------+------------+-----------+------------+--------------------+--------+
+    | 192.168.156.102:2379 | 4f55cac6744452f2 |  3.5.14 |   25 kB |      true |      false |         6 |         12 |                 12 |        |
+    +----------------------+------------------+---------+---------+-----------+------------+-----------+------------+--------------------+--------+
+
 
 
     ansible-playbook -i inventory.ini setup_postgres_patroni.yml # setup patroni 
 
     /opt/patroni-venv/bin/patronictl -c /etc/patroni.yml list # chech patroni list
- 
-    +  Cluster: postgres (7525717775729802398) +-----------+----+-----------+
-    | Member        | Host          | Role    | State     | TL | Lag in MB |
-    +---------------+---------------+---------+-----------+----+-----------+
-    | 172.26.226.99 | 172.26.226.99 | Leader  | running   |  1 |           |
-    | 172.26.235.51 | 172.26.235.51 | Replica | streaming |  1 |         0 |
-    +---------------+---------------+---------+-----------+----+-----------+
+    + Cluster: postgres (7547525253919397715) ----+-----------+----+-----------+
+    | Member          | Host            | Role    | State     | TL | Lag in MB |
+    +-----------------+-----------------+---------+-----------+----+-----------+
+    | 192.168.156.103 | 192.168.156.103 | Leader  | running   |  1 |           |
+    | 192.168.156.104 | 192.168.156.104 | Replica | streaming |  1 |         0 |
+    +-----------------+-----------------+---------+-----------+----+-----------+
 
     ansible-playbook -i inventory.ini haproxy-setup.yml
