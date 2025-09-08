@@ -47,7 +47,7 @@
 
     ansible-playbook -i inventory.ini setup_postgres_patroni.yml # setup patroni 
 
-     /opt/patroni-venv/bin/patronictl -c /etc/patroni.yml list # chech patroni list
+    /opt/patroni-venv/bin/patronictl -c /etc/patroni.yml list # chech patroni list
  
     +  Cluster: postgres (7525717775729802398) +-----------+----+-----------+
     | Member        | Host          | Role    | State     | TL | Lag in MB |
