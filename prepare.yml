@@ -5,3 +5,9 @@
   gather_facts: true
   
   tasks:
+    - name: Install wget and tcpdump using dnf
+      dnf:
+        name:
+          - wget
+          - tcpdump
+        state: present
